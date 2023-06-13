@@ -1,6 +1,10 @@
-# node + mongoDB
+# 캠프 페이지
 
-## YelpCamp
+## 사용스택
+node.js (express) 
+mongoDB
+css (부트스트랩)
+html5
 
 ### 기능
 
