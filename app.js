@@ -3,7 +3,7 @@ const express = require('express'); // express
 const path = require('path'); // 경로 설정
 const mongoose = require('mongoose'); // db 연결
 const ejsMate = require('ejs-mate'); // 템플릿
-const {campgroundSchema} = require('./schemas'); // 유효성검사
+const { campgroundSchema, reviewSchema } = require('./schemas.js'); // 유효성검사
 const catchAsync = require('./utils/catchAsync'); // 비동기 에러 처리
 const ExpressError = require('./utils/ExpressError') // express 에러 처리
 const methodOverride = require('method-override'); // update, delete 메소드
@@ -37,8 +37,7 @@ app.use(methodOverride("_method"));
 
 // 스키마 유효성 검사
 const validateCampground = (req, res ,next) => {
-    // joi - 유효성 검사 패키지
-    const {error} = campgroundSchema.validate(req.body);
+    const { error } = campgroundSchema.validate(req.body);
     if(error){
         const msg = error.details.map(el => el.message).join(',');
         throw new ExpressError(msg, 400);
@@ -47,13 +46,23 @@ const validateCampground = (req, res ,next) => {
     }
 }
 
-// 비밀번호 체크
-const verifyPassword = (req, res, next) => {
-    const { password } = req.query;
-    if(password === 'aaaa'){
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
+    if(error){
+        const msg = error.details.map(el => el.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
         next();
     }
 }
+
+// // 비밀번호 체크
+// const verifyPassword = (req, res, next) => {
+//     const { password } = req.query;
+//     if(password === 'aaaa'){
+//         next();
+//     }
+// }
 
 // get
 app.get('/', (req, res) => {
@@ -70,7 +79,7 @@ app.get('/campgrounds/new', (req, res) => {
 
 app.get('/campgrounds/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
-    const campground = await Campground.findById(id);
+    const campground = await Campground.findById(id).populate('reviews');
     res.render('campgrounds/show', { campground });
 }))
 app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
@@ -98,14 +107,21 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
 }))
 
 // review
-app.post('/campgrounds/:id/reviews', catchAsync(async (req, res) => {
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findById(id);
     const review = new Review(req.body.review);
     campground.reviews.push(review);
     await review.save();
     await campground.save();
-    res.redirect(`campgrounds/${campground._id}`);
+    res.redirect(`/campgrounds/${campground._id}`);
+}))
+// review delete
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    const {id, reviewId} = req.params;
+    await Campground.findByIdAndUpdate(id, {$pull : {reviews : reviewId}})
+    await Review.findByIdAndDelete(reviewId)
+    res.redirect(`/campgrounds/${id}`);
 }))
 
 // 404
