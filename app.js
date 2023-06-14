@@ -3,11 +3,12 @@ const express = require('express'); // express
 const path = require('path'); // 경로 설정
 const mongoose = require('mongoose'); // db 연결
 const ejsMate = require('ejs-mate'); // 템플릿
-const {campgroundSchema} = require('./schemas.js'); // 유효성검사
+const {campgroundSchema} = require('./schemas'); // 유효성검사
 const catchAsync = require('./utils/catchAsync'); // 비동기 에러 처리
 const ExpressError = require('./utils/ExpressError') // express 에러 처리
 const methodOverride = require('method-override'); // update, delete 메소드
-const Campground = require('./models/campground'); // 모델링
+const Campground = require('./models/campground'); // campground 모델
+const Review = require('./models/review') // review 모델
 const morgan = require('morgan'); // 로그 출력
 
 // db 연결
@@ -94,6 +95,17 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
+}))
+
+// review
+app.post('/campgrounds/:id/reviews', catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const campground = await Campground.findById(id);
+    const review = new Review(req.body.review);
+    campground.reviews.push(review);
+    await review.save();
+    await campground.save();
+    res.redirect(`campgrounds/${campground._id}`);
 }))
 
 // 404
