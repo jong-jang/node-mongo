@@ -3,13 +3,12 @@ const express = require('express'); // express
 const path = require('path'); // 경로 설정
 const mongoose = require('mongoose'); // db 연결
 const ejsMate = require('ejs-mate'); // 템플릿
-const { campgroundSchema, reviewSchema } = require('./schemas.js'); // 유효성검사
-const catchAsync = require('./utils/catchAsync'); // 비동기 에러 처리
 const ExpressError = require('./utils/ExpressError') // express 에러 처리
 const methodOverride = require('method-override'); // update, delete 메소드
-const Campground = require('./models/campground'); // campground 모델
-const Review = require('./models/review') // review 모델
 const morgan = require('morgan'); // 로그 출력
+
+const campgrounds = require('./routes/campground') // 캠프 라우터
+const reviews = require('./routes/review') // 리뷰 라우터
 
 // db 연결
 mongoose.connect('mongodb://localhost:27017/yelp-camp');
@@ -35,94 +34,14 @@ app.use(express.urlencoded({extended:true}));
 // methodoverride
 app.use(methodOverride("_method"));
 
-// 스키마 유효성 검사
-const validateCampground = (req, res ,next) => {
-    const { error } = campgroundSchema.validate(req.body);
-    if(error){
-        const msg = error.details.map(el => el.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-}
-
-const validateReview = (req, res, next) => {
-    const { error } = reviewSchema.validate(req.body);
-    if(error){
-        const msg = error.details.map(el => el.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-}
-
-// // 비밀번호 체크
-// const verifyPassword = (req, res, next) => {
-//     const { password } = req.query;
-//     if(password === 'aaaa'){
-//         next();
-//     }
-// }
+// 라우트
+app.use('/campgrounds', campgrounds);
+app.use('/campgrounds/:id/reviews', reviews);
 
 // get
 app.get('/', (req, res) => {
     res.render('home');
 })
-
-app.get('/campgrounds', catchAsync(async (req, res) => {
-    const campgrounds = await Campground.find({});
-    res.render('campgrounds/index', { campgrounds });
-}))
-app.get('/campgrounds/new', (req, res) => {
-    res.render('campgrounds/new');
-})
-
-app.get('/campgrounds/:id', catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const campground = await Campground.findById(id).populate('reviews');
-    res.render('campgrounds/show', { campground });
-}))
-app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
-    const campground = await Campground.findById(req.params.id);
-    res.render(`campgrounds/edit`, {campground});
-}))
-
-// post
-app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) => {
-    const campground = new Campground(req.body.campground);
-    await campground.save();
-    redirect(`/campgrounds/${campground._id}`)
-}))
-// update
-app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground})
-    redirect(`/campgrounds/${campground._id}`)
-}));
-// delete
-app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await Campground.findByIdAndDelete(id);
-    res.redirect('/campgrounds');
-}))
-
-// review
-app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const campground = await Campground.findById(id);
-    const review = new Review(req.body.review);
-    campground.reviews.push(review);
-    await review.save();
-    await campground.save();
-    res.redirect(`/campgrounds/${campground._id}`);
-}))
-// review delete
-app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
-    const {id, reviewId} = req.params;
-    await Campground.findByIdAndUpdate(id, {$pull : {reviews : reviewId}})
-    await Review.findByIdAndDelete(reviewId)
-    res.redirect(`/campgrounds/${id}`);
-}))
 
 // 404
 app.all('*',(req, res, next) => {
