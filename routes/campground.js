@@ -27,10 +27,18 @@ router.get('/campgrounds/new', (req, res) => {
 router.get('/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findById(id).populate('reviews');
+    if(!campground){
+        req.flash('error', '캠핑장을 찾을 수 없습니다')
+        return req.redirect('/campgrounds');
+    }
     res.render('campgrounds/show', { campground });
 }))
 router.get('/:id/edit', catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id);
+    if(!campground){
+        req.flash('error', '캠핑장을 찾을 수 없습니다')
+        return req.redirect('/campgrounds');
+    }
     res.render(`campgrounds/edit`, {campground});
 }))
 
@@ -38,18 +46,21 @@ router.get('/:id/edit', catchAsync(async (req, res) => {
 router.post('/', validateCampground, catchAsync(async (req, res, next) => {
     const campground = new Campground(req.body.campground);
     await campground.save();
+    req.flash('success', '캠프 등록 성공');
     redirect(`/campgrounds/${campground._id}`)
 }))
 // update
 router.put('/:id', validateCampground, catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground})
+    req.flash('success', '캠프 업데이트 성공')
     redirect(`/campgrounds/${campground._id}`)
 }));
 // delete
 router.delete('/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
+    req.flash('success', '캠핑장이 삭제되었습니다.')
     res.redirect('/campgrounds');
 }))
 
