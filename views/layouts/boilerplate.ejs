@@ -5,38 +5,28 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- 부트스트랩 css -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 
     <title>YelpCamp</title>
 </head>
 <body class="d-flex flex-column vh-100">
+  <!-- nav -->
     <%- include('../partials/navbar') %>
+    
+    <!-- main view -->
     <main class="container mt-5">
+        <%- include('../partials/flash') %>
         <%- body %>
     </main>
+    
+    <!-- footer -->
     <%- include('../partials/footer') %>
     
+    <!-- 부트스트랩 js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script>
-        // Example starter JavaScript for disabling form submissions if there are invalid fields
-    (() => {
-      'use strict'
-    
-      // Fetch all the forms we want to apply custom Bootstrap validation styles to
-      const forms = document.querySelectorAll('.validated-form')
-    
-      // Loop over them and prevent submission
-      Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-          if (!form.checkValidity()) {
-            event.preventDefault()
-            event.stopPropagation()
-          }
-    
-          form.classList.add('was-validated')
-        }, false)
-      })
-    })()
-    </script>
+
+    <!-- 클라이언트 측 유효성검사 -->
+    <script src="/javascripts/validateForms.js"></script>
 </body>
 </html>
