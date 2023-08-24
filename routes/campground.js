@@ -20,7 +20,7 @@ router.get('/', catchAsync(async (req, res) => {
     const campgrounds = await Campground.find({});
     res.render('campgrounds/index', { campgrounds });
 }))
-router.get('/campgrounds/new', (req, res) => {
+router.get('/new', (req, res) => {
     res.render('campgrounds/new');
 })
 
@@ -47,14 +47,14 @@ router.post('/', validateCampground, catchAsync(async (req, res, next) => {
     const campground = new Campground(req.body.campground);
     await campground.save();
     req.flash('success', '캠프 등록 성공');
-    redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${campground._id}`)
 }))
 // update
 router.put('/:id', validateCampground, catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground})
     req.flash('success', '캠프 업데이트 성공')
-    redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${campground._id}`)
 }));
 // delete
 router.delete('/:id', catchAsync(async (req, res) => {
