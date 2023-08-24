@@ -3,7 +3,7 @@ const express = require('express'); // express
 const path = require('path'); // 경로 설정
 const mongoose = require('mongoose'); // db 연결
 const ejsMate = require('ejs-mate'); // 템플릿
-const session = require('express.session'); // 세션
+const session = require('express-session'); // 세션
 const flash = require('connect-flash') // 플래시, 문구 띄우기
 const ExpressError = require('./utils/ExpressError') // express 에러 처리
 const methodOverride = require('method-override'); // update, delete 메소드
@@ -13,7 +13,7 @@ const campgrounds = require('./routes/campground') // 캠프 라우터
 const reviews = require('./routes/review') // 리뷰 라우터
 
 // db 연결
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
+mongoose.connect('mongodb://127.0.0.1/yelp-camp');
 
 // db 연결 오류 체크
 const db = mongoose.connection;
@@ -53,7 +53,7 @@ app.use(session(sessionConfig));
 // 플래시
 app.use(flash());
 app.use((req, res ,next) => {
-    req.locals.success = req.flash('success');
+    res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 })
