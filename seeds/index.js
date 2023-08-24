@@ -4,7 +4,7 @@ const {places, descriptors} = require('./seedHelpers')
 const Campground = require('../models/campground');
 
 // 몽구스 연결
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
+mongoose.connect('mongodb://127.0.0.1/yelp-camp');
 
 // 오류 확인 로직
 const db = mongoose.connection;
