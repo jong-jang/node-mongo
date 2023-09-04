@@ -8,6 +8,9 @@ const flash = require('connect-flash') // 플래시, 문구 띄우기
 const ExpressError = require('./utils/ExpressError') // express 에러 처리
 const methodOverride = require('method-override'); // update, delete 메소드
 const morgan = require('morgan'); // 로그 출력
+const passport = require('passport');
+const LocalStrategy = require('passport-local')
+const User = require('./models/user')
 
 const campgrounds = require('./routes/campground') // 캠프 라우터
 const reviews = require('./routes/review') // 리뷰 라우터
@@ -36,7 +39,7 @@ app.use(express.urlencoded({extended:true}));
 // methodoverride
 app.use(methodOverride("_method"));
 // public 폴더 정적 asset 설정
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 // 세션 설정값
 const sessionConfig = {
     secret: 'thisshouldbeabettersecret!', // 비밀키
@@ -52,12 +55,27 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 // 플래시
 app.use(flash());
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req, res ,next) => {
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 })
 // 라우트
+app.get('/fakeUser', async (req, res) => {
+    const user = new User({email: 'clotttt@gmail.com', username:'colttt'})
+    const newUser = await User.register(user, 'chicken')
+    res.send(newUser);
+})
+
 app.use('/campgrounds', campgrounds);
 app.use('/campgrounds/:id/reviews', reviews);
 
