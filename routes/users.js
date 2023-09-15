@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const catchAsync = require('../utils/catchAsync')
 const User = require('../models/user');
+const passport = require('passport');
 
 router.get('/register', (req, res) => {
   res.render('users/register');
@@ -19,5 +20,15 @@ router.post('/register', catchAsync(async(req,res) => {
     res.redirect('register')
   }
 }));
+
+router.get('/login', (req, res) => {
+  res.render('users/login')
+})
+
+// 로그인 실패시 메시지띄우고 로그인 페이지로 리다이렉트 authenticate = 해쉬역할
+router.post('/login', passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), (req, res) => {
+  res.flash('success', 'welcome back!');
+  res.redirect('/campgrounds')
+})
 
 module.exports = router;
