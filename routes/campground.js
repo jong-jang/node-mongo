@@ -4,6 +4,7 @@ const catchAsync = require('../utils/catchAsync'); // 비동기 에러 처리
 const { campgroundSchema } = require('../schemas.js'); // 유효성검사
 const ExpressError = require('../utils/ExpressError'); // express 에러 처리
 const Campground = require('../models/campground'); // campground 모델
+const { isLoggedIn } = require('../middleware.js');
 
 // 스키마 유효성 검사
 const validateCampground = (req, res, next) => {
@@ -23,16 +24,13 @@ router.get(
 		res.render('campgrounds/index', { campgrounds });
 	})
 );
-router.get('/new', (req, res) => {
-	if (!req.isAuthenticated()) {
-		req.flash('error', '로그인 해주세요');
-		return res.redirect('/login');
-	}
+router.get('/new', isLoggedIn, (req, res) => {
 	res.render('campgrounds/new');
 });
 
 router.get(
 	'/:id',
+	isLoggedIn,
 	catchAsync(async (req, res) => {
 		const { id } = req.params;
 		const campground = await Campground.findById(id).populate('reviews');
@@ -45,6 +43,7 @@ router.get(
 );
 router.get(
 	'/:id/edit',
+	isLoggedIn,
 	catchAsync(async (req, res) => {
 		const campground = await Campground.findById(req.params.id);
 		if (!campground) {
@@ -58,6 +57,7 @@ router.get(
 // post
 router.post(
 	'/',
+	isLoggedIn,
 	validateCampground,
 	catchAsync(async (req, res, next) => {
 		const campground = new Campground(req.body.campground);
@@ -69,6 +69,7 @@ router.post(
 // update
 router.put(
 	'/:id',
+	isLoggedIn,
 	validateCampground,
 	catchAsync(async (req, res) => {
 		const { id } = req.params;
@@ -80,6 +81,7 @@ router.put(
 // delete
 router.delete(
 	'/:id',
+	isLoggedIn,
 	catchAsync(async (req, res) => {
 		const { id } = req.params;
 		await Campground.findByIdAndDelete(id);
